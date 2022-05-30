@@ -7,9 +7,6 @@ const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const port = process.env.PORT || 5000;
 
-app.use(cors());
-app.use(express.json());
-
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@gadgetsemporium.hdqun.mongodb.net/?retryWrites=true&w=majority`;
 
 function verifyJWT(req, res, next) {
@@ -26,16 +23,19 @@ function verifyJWT(req, res, next) {
     next();
   });
 }
-
 const client = new MongoClient(uri, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
   serverApi: ServerApiVersion.v1,
 });
 
+app.use(cors());
+app.use(express.json());
+
 async function run() {
   try {
     await client.connect();
+    console.log("Connected to MongoDB");
 
     const productsCollection = client
       .db("gadgetsEmporium")
@@ -48,7 +48,6 @@ async function run() {
     const reviewCollection = client.db("gadgetsEmporium").collection("reviews");
     const blogsCollection = client.db("gadgetsEmporium").collection("blogs");
     const teamsCollection = client.db("gadgetsEmporium").collection("teams");
-    console.log("Connected to MongoDB");
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -137,7 +136,7 @@ async function run() {
     app.get("/admin/:email", async (req, res) => {
       const email = req.params.email;
       const user = await usersCollection.findOne({ email: email });
-      const isAdmin = user.role === "admin";
+      const isAdmin = user?.role === "admin";
       res.send({ admin: isAdmin });
     });
 
@@ -233,7 +232,6 @@ async function run() {
           Product Routes Ends
     */
   } finally {
-    client.close();
   }
 }
 
