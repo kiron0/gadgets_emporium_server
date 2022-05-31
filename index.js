@@ -45,7 +45,9 @@ async function run() {
     const paymentCollection = client
       .db("gadgetsEmporium")
       .collection("payments");
-    const reviewCollection = client.db("gadgetsEmporium").collection("reviews");
+    const reviewsCollection = client
+      .db("gadgetsEmporium")
+      .collection("reviews");
     const blogsCollection = client.db("gadgetsEmporium").collection("blogs");
     const teamsCollection = client.db("gadgetsEmporium").collection("teams");
 
@@ -131,6 +133,54 @@ async function run() {
     // -----------------------------
     /*
           Admin Routes Starts
+    */
+
+    // -----------------------------
+    /*
+          Order Routes Starts
+    */
+    //get only my orders with uid
+    app.get("/orders", verifyJWT, async (req, res) => {
+      const uid = req.query.uid;
+      const decodedID = req.decoded.uid;
+      const query = { uid: uid };
+      if (decodedID === uid) {
+        const myOrders = await orderCollection.find(query).toArray();
+        return res.send(myOrders);
+      } else {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+    });
+
+    // get all orders
+    app.get("/orders/all", verifyJWT, verifyAdmin, async (req, res) => {
+      const orders = await orderCollection.find({}).toArray();
+      res.send(orders);
+    });
+
+    // post order to database with stop duplicates
+    app.post("/orders", verifyJWT, async (req, res) => {
+      const order = req.body;
+      const exists = await orderCollection.findOne({
+        uid: order.uid,
+        id: order.productInfo.id,
+      });
+      if (exists) {
+        return res.send({ success: false, order: exists });
+      } else {
+        const result = await orderCollection.insertOne(order);
+        res.send({ success: true, order: result });
+      }
+    });
+
+    // delete a order
+    app.delete("/orders/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const result = await orderCollection.deleteOne({ _id: ObjectId(id) });
+      res.send(result);
+    });
+    /*
+          Order Routes Ends
     */
 
     app.get("/admin/:email", async (req, res) => {
@@ -228,8 +278,56 @@ async function run() {
       }
     });
 
+    app.patch("/products/updateQty/:id", async (req, res) => {
+      const id = req.params.id;
+      const body = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: body,
+      };
+      const updatedBooking = await productsCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
+      res.send(updatedBooking);
+    });
+
     /*
           Product Routes Ends
+    */
+
+    /*
+          Teams Routes Starts
+    */
+
+    app.get("/teams", verifyJWT, async (req, res) => {
+      const teams = await teamsCollection.find({}).toArray();
+      res.send(teams);
+    });
+
+    /*
+          Teams Routes Ends
+    */
+
+    /*
+          Reviews Routes Starts
+    */
+    // get reviews
+    app.get("/reviews", verifyJWT, async (req, res) => {
+      const reviews = await reviewsCollection.find({}).toArray();
+      res.send(reviews);
+    });
+
+    // post review with uid params
+    app.post("/reviews", verifyJWT, async (req, res) => {
+      const review = req.body;
+      const result = await reviewsCollection.insertOne(review);
+      res.send(result);
+    });
+    /*
+          Reviews Routes Ends
     */
   } finally {
   }
