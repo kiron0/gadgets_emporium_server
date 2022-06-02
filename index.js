@@ -48,7 +48,9 @@ async function run() {
     const reviewsCollection = client
       .db("gadgetsEmporium")
       .collection("reviews");
-    const blogsCollection = client.db("gadgetsEmporium").collection("blogs");
+    const addToCartCollection = client
+      .db("gadgetsEmporium")
+      .collection("carts");
     const teamsCollection = client.db("gadgetsEmporium").collection("teams");
 
     const verifyAdmin = async (req, res, next) => {
@@ -62,6 +64,72 @@ async function run() {
         res.status(403).send({ message: "forbidden" });
       }
     };
+
+    /*
+          Payment Routes Starts
+    */
+    app.post("/payment/create-payment-intent", verifyJWT, async (req, res) => {
+      const data = req.body;
+      const price = data.price;
+      const amount = price * 100;
+      const paymentIntent = await stripe.paymentIntents.create({
+        amount: amount,
+        currency: "usd",
+        payment_method_types: ["card"],
+      });
+      res.send({ clientSecret: paymentIntent.client_secret });
+    });
+
+    app.post("/booking", verifyJWT, async (req, res) => {
+      const id = req.query.id;
+      const payment = req.body;
+      const filter = { _id: ObjectId(id) };
+      const result = await paymentCollection.insertOne(payment);
+      res.send(result);
+    });
+
+    app.get("/payment/history", verifyJWT, async (req, res) => {
+      const uid = req.query.uid;
+      if (uid) {
+        const payment = await paymentCollection.find({ uid: uid }).toArray();
+        res.send(payment);
+      } else {
+        res.status(403).send({ message: "forbidden access" });
+      }
+    });
+
+    app.patch("/orders/paid/:id", async (req, res) => {
+      const id = req.params.id;
+      const body = req.body;
+      const filter = { _id: ObjectId(id) };
+      const options = { upsert: true };
+      const updatedDoc = {
+        $set: body,
+      };
+      const updatedBooking = await orderCollection.updateOne(
+        filter,
+        updatedDoc,
+        options
+      );
+      res.send(updatedBooking);
+    });
+
+    app.patch("/orders/shipped/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const body = req.body;
+      const filter = { _id: ObjectId(id) };
+      const updatedDoc = {
+        $set: body,
+      };
+      const updatedBooking = await orderCollection.updateOne(
+        filter,
+        updatedDoc
+      );
+      res.send(updatedBooking);
+    });
+    /*
+          Payment Routes Ends
+    */
 
     /*
           User Routes Starts
@@ -292,6 +360,40 @@ async function run() {
         options
       );
       res.send(updatedBooking);
+    });
+
+    app.get("/carts", verifyJWT, async (req, res) => {
+      const uid = req.query.uid;
+      const decodedID = req.decoded.uid;
+      const query = { uid: uid };
+      if (decodedID === uid) {
+        const myOrders = await addToCartCollection.find(query).toArray();
+        return res.send(myOrders);
+      } else {
+        return res.status(403).send({ message: "forbidden access" });
+      }
+    });
+
+    app.post("/carts", verifyJWT, async (req, res) => {
+      const cart = req.body;
+      const exists = await addToCartCollection.findOne({
+        uid: cart.uid,
+        id: cart.productInfo.id,
+      });
+      if (exists) {
+        return res.send({ success: false, order: exists });
+      } else {
+        const result = await addToCartCollection.insertOne(cart);
+        res.send({ success: true, order: result });
+      }
+    });
+
+    app.delete("/carts/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const result = await addToCartCollection.deleteOne({
+        _id: ObjectId(id),
+      });
+      res.send(result);
     });
 
     /*
