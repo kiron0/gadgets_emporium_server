@@ -64,6 +64,62 @@ async function run() {
     };
 
     /*
+          Payment Routes Starts
+    */
+          app.post("/payment/create-payment-intent", verifyJWT, async (req, res) => {
+            const data = req.body;
+            const price = data.price;
+            const amount = price * 100;
+            const paymentIntent = await stripe.paymentIntents.create({
+              amount: amount,
+              currency: "usd",
+              payment_method_types: ["card"],
+            });
+            res.send({ clientSecret: paymentIntent.client_secret });
+          });
+
+          app.post("/booking", verifyJWT, async (req, res) => {
+            const id = req.query.id;
+            const payment = req.body;
+            const filter = { _id: ObjectId(id) };
+            const result = await paymentCollection.insertOne(payment);
+            res.send(result);
+          });
+
+          app.patch("/orders/paid/:id", async (req, res) => {
+            const id = req.params.id;
+            const body = req.body;
+            const filter = { _id: ObjectId(id) };
+            const options = { upsert: true };
+            const updatedDoc = {
+              $set: body,
+            };
+            const updatedBooking = await orderCollection.updateOne(
+              filter,
+              updatedDoc,
+              options
+            );
+            res.send(updatedBooking);
+          });
+
+          app.patch("/orders/shipped/:id", verifyJWT, async (req, res) => {
+            const id = req.params.id;
+            const body = req.body;
+            const filter = { _id: ObjectId(id) };
+            const updatedDoc = {
+              $set: body,
+            };
+            const updatedBooking = await orderCollection.updateOne(
+              filter,
+              updatedDoc
+            );
+            res.send(updatedBooking);
+          });
+    /*
+          Payment Routes Ends
+    */
+
+    /*
           User Routes Starts
     */
 
