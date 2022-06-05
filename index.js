@@ -52,6 +52,9 @@ async function run() {
       .db("gadgetsEmporium")
       .collection("carts");
     const teamsCollection = client.db("gadgetsEmporium").collection("teams");
+    const teamMembersCollection = client
+      .db("gadgetsEmporium")
+      .collection("teamMembers");
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -428,8 +431,43 @@ async function run() {
       const result = await reviewsCollection.insertOne(review);
       res.send(result);
     });
+
+    app.delete("/reviews/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const result = await reviewsCollection.deleteOne({
+        _id: ObjectId(id),
+      });
+      res.send(result);
+    });
     /*
           Reviews Routes Ends
+    */
+
+    /*
+          Team Member Routes Starts
+    */
+
+    app.get("/teamMembers", verifyJWT, async (req, res) => {
+      const teamMembers = await teamMembersCollection.find({}).toArray();
+      res.send(teamMembers);
+    });
+
+    app.post("/teamMembers", verifyJWT, async (req, res) => {
+      const teamMember = req.body;
+      const result = await teamMembersCollection.insertOne(teamMember);
+      res.send(result);
+    });
+
+    app.delete("/teamMembers/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const result = await teamMembersCollection.deleteOne({
+        _id: ObjectId(id),
+      });
+      res.send(result);
+    });
+
+    /*
+          Team Member Routes Ends
     */
   } finally {
   }
