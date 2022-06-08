@@ -281,7 +281,7 @@ async function run() {
           Product Routes Starts
     */
 
-    app.get("/products", verifyJWT, async (req, res) => {
+    app.get("/products", async (req, res) => {
       let sort;
       if (req.query.sort) {
         sort = { _id: -1 };
@@ -407,7 +407,7 @@ async function run() {
           Teams Routes Starts
     */
 
-    app.get("/teams", verifyJWT, async (req, res) => {
+    app.get("/teams", async (req, res) => {
       const teams = await teamsCollection.find({}).toArray();
       res.send(teams);
     });
@@ -420,7 +420,7 @@ async function run() {
           Reviews Routes Starts
     */
     // get reviews
-    app.get("/reviews", verifyJWT, async (req, res) => {
+    app.get("/reviews", async (req, res) => {
       const reviews = await reviewsCollection.find({}).toArray();
       res.send(reviews);
     });
