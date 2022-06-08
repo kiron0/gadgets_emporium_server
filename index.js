@@ -138,7 +138,7 @@ async function run() {
           User Routes Starts
     */
 
-    app.get("/users", verifyJWT, async (req, res) => {
+    app.get("/users", async (req, res) => {
       const uid = req.query.uid;
       if (uid) {
         const users = await usersCollection.find({ uid: uid }).toArray();
@@ -266,6 +266,15 @@ async function run() {
       const filter = { email: email };
       const updateDoc = {
         $set: { role: "admin" },
+      };
+      const result = await usersCollection.updateOne(filter, updateDoc);
+      res.send(result);
+    });
+    app.put("/user/removeAdmin/", verifyJWT, verifyAdmin, async (req, res) => {
+      const email = req.body.email;
+      const filter = { email: email };
+      const updateDoc = {
+        $set: { role: "user" },
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
