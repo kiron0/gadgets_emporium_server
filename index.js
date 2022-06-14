@@ -55,6 +55,7 @@ async function run() {
     const teamMembersCollection = client
       .db("gadgetsEmporium")
       .collection("teamMembers");
+    const blogsCollection = client.db("gadgetsEmporium").collection("blogs");
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -477,6 +478,23 @@ async function run() {
 
     /*
           Team Member Routes Ends
+    */
+
+    /*
+          Blogs Routes Starts
+    */
+    app.get("/blogs", verifyJWT, async (req, res) => {
+      const blogs = await blogsCollection.find({}).toArray();
+      res.send(blogs);
+    });
+
+    app.get("/blogs/:id", verifyJWT, async (req, res) => {
+      const id = req.params.id;
+      const blog = await blogsCollection.findOne({ _id: ObjectId(id) });
+      res.send(blog);
+    });
+    /*
+          Blogs Routes Ends
     */
   } finally {
   }
