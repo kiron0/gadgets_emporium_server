@@ -568,7 +568,7 @@ async function run() {
       res.send(searchedResult);
     });
 
-    app.get("/blogs/:id", verifyJWT, async (req, res) => {
+    app.get("/blogs/:id", async (req, res) => {
       const id = req.params.id;
       const blog = await blogsCollection.findOne({ _id: ObjectId(id) });
       res.send(blog);
