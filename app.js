@@ -58,6 +58,12 @@ async function run() {
       .db("gadgetsEmporium")
       .collection("teamMembers");
     const blogsCollection = client.db("gadgetsEmporium").collection("blogs");
+    const appNameCollection = client
+      .db("gadgetsEmporium")
+      .collection("appName");
+    const featureRequestCollection = client
+      .db("gadgetsEmporium")
+      .collection("featureRequest");
 
     const verifyAdmin = async (req, res, next) => {
       const requester = req.decoded.email;
@@ -281,6 +287,49 @@ async function run() {
       };
       const result = await usersCollection.updateOne(filter, updateDoc);
       res.send(result);
+    });
+
+    app.get("/app/appName", async (req, res) => {
+      const appID = {
+        _id: ObjectId("636f41f3940a414e1fe1f617"),
+      };
+      const appName = await appNameCollection.findOne(appID);
+      res.send(appName);
+    });
+
+    // update app name
+    app.patch(
+      "/app/changeAppName",
+      verifyJWT,
+      verifyAdmin,
+      async (req, res) => {
+        const name = req.body;
+        const appID = {
+          _id: ObjectId("636f41f3940a414e1fe1f617"),
+        };
+        const updateDoc = {
+          $set: name,
+        };
+        const result = await appNameCollection.updateOne(appID, updateDoc);
+        if (result.acknowledged) {
+          res.send({ success: true, message: "Update app name successfully" });
+        }
+      }
+    );
+
+    // post feature request to database
+    app.post("/app/sendFeatureRequest", async (req, res) => {
+      const featureRequest = req.body;
+      const result = await featureRequestCollection.insertOne(featureRequest);
+      if (result.acknowledged) {
+        res.send({
+          success: true,
+          message: "Feature request sent successfully",
+        });
+      } else {
+        res.send({ success: false, message: "Feature request failed" });
+      }
+      res.send({ result });
     });
 
     /*
@@ -591,7 +640,7 @@ async function run() {
 run().catch(console.dir);
 
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "./Views/index.html"));
+  res.sendFile(path.join(__dirname, "./views/index.html"));
 });
 
 module.exports = app;
