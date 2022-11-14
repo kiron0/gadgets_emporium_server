@@ -10,6 +10,17 @@ const getReviews = async (req, res) => {
   res.send(reviews);
 };
 
+const getReviewsByUserId = async (req, res) => {
+  const uid = req.query.uid;
+  const decodedID = req.decoded.uid;
+  const query = { "author.uid": uid };
+  if (decodedID === uid) {
+    const myReviews = await reviewsCollection.find(query).toArray();
+    return res.send(myReviews);
+  }
+  return res.status(403).send({ message: "forbidden access" });
+};
+
 const postReview = async (req, res) => {
   const review = req.body;
   const result = await reviewsCollection.insertOne(review);
@@ -50,6 +61,7 @@ const featureRequestPost = async (req, res) => {
 
 module.exports = {
   getReviews,
+  getReviewsByUserId,
   postReview,
   deleteReview,
   updateReview,
