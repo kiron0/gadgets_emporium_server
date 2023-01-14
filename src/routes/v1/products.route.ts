@@ -1,6 +1,8 @@
-const router = require("express").Router();
-const VerifyToken = require("../../middlewares/VerifyToken");
-const {
+import { Router } from "express";
+const router: Router = Router();
+import { VerifyToken } from "../../middlewares/VerifyToken";
+
+import {
   getAllProducts,
   getProductsSort,
   searchProducts,
@@ -14,7 +16,7 @@ const {
   addToCart,
   deleteCart,
   getTeams
-} = require("../../controllers/productsController");
+} from "../../controllers/products.controller";
 
 router.get("/products/all", getAllProducts);
 router.get("/products", getProductsSort);
@@ -30,4 +32,4 @@ router.post("/products/carts", VerifyToken, addToCart);
 router.delete("/products/carts/:id", VerifyToken, deleteCart);
 router.get("/teams", getTeams);
 
-module.exports = router;
+export default router;

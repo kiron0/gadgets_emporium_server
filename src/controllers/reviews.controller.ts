@@ -1,18 +1,19 @@
-const { ObjectId } = require("mongodb");
-const client = require("../utils/dbConnect");
+import { Request, Response } from "express";
+import { ObjectId } from "mongodb";
+import client from "../utils/dbCollection";
 const reviewsCollection = client.db("gadgetsEmporium").collection("reviews");
 const featureRequestCollection = client
   .db("gadgetsEmporium")
   .collection("featureRequest");
 
-const getReviews = async (req, res) => {
+export const getReviews = async (req: Request, res: Response) => {
   const reviews = await reviewsCollection.find({}).toArray();
   res.send(reviews);
 };
 
-const getReviewsByUserId = async (req, res) => {
+export const getReviewsByUserId = async (req: Request, res: Response) => {
   const uid = req.query.uid;
-  const decodedID = req.decoded.uid;
+  const decodedID = req.body.user.uid;
   const query = { "author.uid": uid };
   if (decodedID === uid) {
     const myReviews = await reviewsCollection.find(query).toArray();
@@ -21,31 +22,31 @@ const getReviewsByUserId = async (req, res) => {
   return res.status(403).send({ message: "forbidden access" });
 };
 
-const postReview = async (req, res) => {
+export const postReview = async (req: Request, res: Response) => {
   const review = req.body;
   const result = await reviewsCollection.insertOne(review);
   res.send(result);
 };
 
-const deleteReview = async (req, res) => {
+export const deleteReview = async (req: Request, res: Response) => {
   const id = req.params.id;
   const result = await reviewsCollection.deleteOne({
-    _id: ObjectId(id),
+    _id: new ObjectId(id),
   });
   res.send(result);
 };
 
-const updateReview = async (req, res) => {
+export const updateReview = async (req: Request, res: Response) => {
   const id = req.params.id;
   const review = req.body;
   const result = await reviewsCollection.updateOne(
-    { _id: ObjectId(id) },
+    { _id: new ObjectId(id) },
     { $set: review }
   );
   res.send(result);
 };
 
-const featureRequestPost = async (req, res) => {
+export const featureRequestPost = async (req: Request, res: Response) => {
   const featureRequest = req.body;
   const result = await featureRequestCollection.insertOne(featureRequest);
   if (result.acknowledged) {
@@ -57,13 +58,4 @@ const featureRequestPost = async (req, res) => {
     res.send({ success: false, message: "Feature request failed" });
   }
   res.send({ result });
-};
-
-module.exports = {
-  getReviews,
-  getReviewsByUserId,
-  postReview,
-  deleteReview,
-  updateReview,
-  featureRequestPost,
 };

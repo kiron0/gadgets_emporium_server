@@ -1,24 +1,27 @@
-const { ObjectId } = require("mongodb");
-const client = require("../utils/dbConnect");
+import { Request, Response } from "express";
+import { ObjectId } from "mongodb";
+import client from "../utils/dbCollection";
 const productsCollection = client.db("gadgetsEmporium").collection("products");
 const teamsCollection = client.db("gadgetsEmporium").collection("teams");
+const addToCartCollection = client.db("gadgetsEmporium").collection("cart");
 
-const getProductsSort = async (req, res) => {
+export const getProductsSort = async (req: Request, res: Response) => {
   let sort;
   if (req.query.sort) {
-    sort = { _id: -1 };
+    sort = { _id: -1 } as any;
   }
   const parts = await productsCollection.find({}).sort(sort).toArray();
   res.send(parts);
 };
 
-const getAllProducts = async (req, res) => {
+export const getAllProducts = async (req: Request, res: Response) => {
   const result = await productsCollection.find({}).toArray();
   res.send({ success: true, result: result });
 };
 
-const searchProducts = async (req, res) => {
-  const searchText = req.query.q.toLowerCase();
+export const searchProducts = async (req: Request, res: Response) => {
+  const q = req.query.q as string;
+  const searchText = q.toLowerCase();
   const result = await productsCollection.find({}).toArray();
   const searchedResult = result.filter((product) =>
     product.productName.toLowerCase().includes(searchText)
@@ -26,31 +29,31 @@ const searchProducts = async (req, res) => {
   res.send(searchedResult);
 };
 
-const addProduct = async (req, res) => {
+export const addProduct = async (req: Request, res: Response) => {
   const parts = req.body;
   const result = await productsCollection.insertOne(parts);
   res.send(result);
 };
 
-const getProductById = async (req, res) => {
+export const getProductById = async (req: Request, res: Response) => {
   const parts = await productsCollection.findOne({
-    _id: ObjectId(req.params.id),
+    _id: new ObjectId(req.params.id),
   });
   res.send(parts);
 };
 
-const deleteProduct = async (req, res) => {
+export const deleteProduct = async (req: Request, res: Response) => {
   const id = req.params.id;
   const result = await productsCollection.deleteOne({
-    _id: ObjectId(id),
+    _id: new ObjectId(id),
   });
   res.send(result);
 };
 
-const updateStockProduct = async (req, res) => {
+export const updateStockProduct = async (req: Request, res: Response) => {
   const id = req.params.id;
   const body = req.body;
-  const filter = { _id: ObjectId(id) };
+  const filter = { _id: new ObjectId(id) };
   const options = { upsert: true };
   const updatedDoc = {
     $set: body,
@@ -63,7 +66,7 @@ const updateStockProduct = async (req, res) => {
   res.send(updatedBooking);
 };
 
-const updateProduct = async (req, res) => {
+export const updateProduct = async (req: Request, res: Response) => {
   const id = req.params.id;
   const body = req.body;
   const query = {
@@ -72,7 +75,7 @@ const updateProduct = async (req, res) => {
   };
   const exists = await productsCollection.findOne(query);
   const result = await productsCollection.updateOne(
-    { _id: ObjectId(id) },
+    { _id: new ObjectId(id) },
     { $set: body },
     { upsert: true }
   );
@@ -83,10 +86,10 @@ const updateProduct = async (req, res) => {
   }
 };
 
-const updateQuantity = async (req, res) => {
+export const updateQuantity = async (req: Request, res: Response) => {
   const id = req.params.id;
   const body = req.body;
-  const filter = { _id: ObjectId(id) };
+  const filter = { _id: new ObjectId(id) };
   const options = { upsert: true };
   const updatedDoc = {
     $set: body,
@@ -99,9 +102,9 @@ const updateQuantity = async (req, res) => {
   res.send(updatedBooking);
 };
 
-const getCarts = async (req, res) => {
+export const getCarts = async (req: Request, res: Response) => {
   const uid = req.query.uid;
-  const decodedID = req.decoded.uid;
+  const decodedID = req.body.user.uid;
   const query = { uid: uid };
   if (decodedID === uid) {
     const myOrders = await addToCartCollection.find(query).toArray();
@@ -111,7 +114,7 @@ const getCarts = async (req, res) => {
   }
 };
 
-const addToCart = async (req, res) => {
+export const addToCart = async (req: Request, res: Response) => {
   const cart = req.body;
   const exists = await addToCartCollection.findOne({
     uid: cart.uid,
@@ -125,31 +128,15 @@ const addToCart = async (req, res) => {
   }
 };
 
-const deleteCart = async (req, res) => {
+export const deleteCart = async (req: Request, res: Response) => {
   const id = req.params.id;
   const result = await addToCartCollection.deleteOne({
-    _id: ObjectId(id),
+    _id: new ObjectId(id),
   });
   res.send(result);
 };
 
-const getTeams = async (req, res) => {
+export const getTeams = async (req: Request, res: Response) => {
   const teams = await teamsCollection.find({}).toArray();
   res.send(teams);
-};
-
-module.exports = {
-  getAllProducts,
-  getProductsSort,
-  searchProducts,
-  addProduct,
-  getProductById,
-  deleteProduct,
-  updateStockProduct,
-  updateProduct,
-  updateQuantity,
-  getCarts,
-  addToCart,
-  deleteCart,
-  getTeams,
 };

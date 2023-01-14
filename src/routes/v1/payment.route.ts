@@ -1,15 +1,15 @@
-const router = require("express").Router();
-const VerifyAdmin = require("../../middlewares/VerifyAdmin");
-const VerifyToken = require("../../middlewares/VerifyToken");
+import { Router } from "express";
+const router: Router = Router();
+import { VerifyToken } from "../../middlewares/VerifyToken";
 
-const {
+import {
   createPaymentIntent,
   createBooking,
   getPaymentHistory,
-} = require("../../controllers/paymentController");
+} from "../../controllers/payment.controller";
 
 router.post("/payment/create-payment-intent", VerifyToken, createPaymentIntent);
 router.post("/booking", VerifyToken, createBooking);
 router.get("/payment/history", VerifyToken, getPaymentHistory);
 
-module.exports = router;
+export default router;

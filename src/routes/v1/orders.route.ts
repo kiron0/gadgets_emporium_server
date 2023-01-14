@@ -1,15 +1,16 @@
-const router = require("express").Router();
-const VerifyAdmin = require("../../middlewares/VerifyAdmin");
-const VerifyToken = require("../../middlewares/VerifyToken");
+import { Router } from "express";
+const router: Router = Router();
+import { VerifyAdmin } from "../../middlewares/VerifyAdmin";
+import { VerifyToken } from "../../middlewares/VerifyToken";
 
-const {
+import {
   getAllOrders,
   getOrders,
   addOrder,
   deleteOrder,
   paidOrder,
   shippedOrder,
-} = require("../../controllers/ordersController");
+} from "../../controllers/orders.controller";
 
 router.get("/orders/all", VerifyToken, VerifyAdmin, getAllOrders);
 router.get("/orders", VerifyToken, getOrders);
@@ -18,4 +19,4 @@ router.delete("/orders/:id", deleteOrder);
 router.patch("/orders/paid/:id", paidOrder);
 router.patch("/orders/shipped/:id", shippedOrder);
 
-module.exports = router;
+export default router;

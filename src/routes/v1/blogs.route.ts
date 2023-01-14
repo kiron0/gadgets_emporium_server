@@ -1,7 +1,9 @@
-const router = require("express").Router();
-const VerifyToken = require("../../middlewares/VerifyToken");
+import { Router } from "express";
+const router: Router = Router();
+import { VerifyAdmin } from "../../middlewares/VerifyAdmin";
+import { VerifyToken } from "../../middlewares/VerifyToken";
 
-const {
+import {
   getAllBlogs,
   getBlogs,
   updateBlogs,
@@ -9,7 +11,7 @@ const {
   searchBlogs,
   getBlogById,
   postBlogs,
-} = require("../../controllers/blogsController");
+} from "../../controllers/blogs.controller";
 
 router.get("/blogs/all", getAllBlogs);
 router.get("/blogs", VerifyToken, getBlogs);
@@ -19,4 +21,4 @@ router.get("/blogs/search", searchBlogs);
 router.get("/blogs/:id", getBlogById);
 router.post("/blogs", VerifyToken, postBlogs);
 
-module.exports = router;
+export default router;

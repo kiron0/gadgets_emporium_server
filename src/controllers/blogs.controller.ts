@@ -1,15 +1,16 @@
-const { ObjectId } = require("mongodb");
-const client = require("../utils/dbConnect");
+import { Request, Response } from "express";
+import { ObjectId } from "mongodb";
+import client from "../utils/dbCollection";
 const blogsCollection = client.db("gadgetsEmporium").collection("blogs");
 
-const getAllBlogs = async (req, res) => {
+export const getAllBlogs = async (req: Request, res: Response) => {
   const blogs = await blogsCollection.find({}).toArray();
   res.send(blogs);
 };
 
-const getBlogs = async (req, res) => {
+export const getBlogs = async (req: Request, res: Response) => {
   const userId = req.query.uid;
-  const decodedID = req.decoded.uid;
+  const decodedID = req.body.user.uid;
   const query = { "author.uid": userId };
   if (decodedID === userId) {
     const result = await blogsCollection.find(query).toArray();
@@ -19,14 +20,14 @@ const getBlogs = async (req, res) => {
   }
 };
 
-const updateBlogs = async (req, res) => {
+export const updateBlogs = async (req: Request, res: Response) => {
   const userId = req.query.uid;
-  const decodedID = req.decoded.uid;
+  const decodedID = req.body.user.uid;
   const id = req.query.editId;
   const data = req.body;
   if (userId === decodedID) {
     const options = { upsert: true };
-    const query = { _id: ObjectId(id) };
+    const query = { _id: new ObjectId(id as string) };
     const updateDoc = {
       $set: data,
     };
@@ -42,12 +43,12 @@ const updateBlogs = async (req, res) => {
   }
 };
 
-const deleteBlogs = async (req, res) => {
+export const deleteBlogs = async (req: Request, res: Response) => {
   const userId = req.query.uid;
   const deleteId = req.query.deletedId;
-  const decodedID = req.decoded.uid;
+  const decodedID = req.body.user.uid;
   if (userId === decodedID) {
-    const query = { _id: ObjectId(deleteId) };
+    const query = { _id: new ObjectId(deleteId as string) };
     const result = await blogsCollection.deleteOne(query);
     if (result.acknowledged) {
       res.send({
@@ -60,8 +61,9 @@ const deleteBlogs = async (req, res) => {
   }
 };
 
-const searchBlogs = async (req, res) => {
-  const searchText = req.query.q.toLowerCase();
+export const searchBlogs = async (req: Request, res: Response) => {
+  const q = req.query.q as string;
+  const searchText = q.toLowerCase();
   const result = await blogsCollection.find({}).toArray();
   const searchedResult = result.filter((blogs) =>
     blogs.title.toLowerCase().includes(searchText)
@@ -69,24 +71,14 @@ const searchBlogs = async (req, res) => {
   res.send(searchedResult);
 };
 
-const getBlogById = async (req, res) => {
+export const getBlogById = async (req: Request, res: Response) => {
   const id = req.params.id;
-  const blog = await blogsCollection.findOne({ _id: ObjectId(id) });
+  const blog = await blogsCollection.findOne({ _id: new ObjectId(id) });
   res.send(blog);
 };
 
-const postBlogs = async (req, res) => {
+export const postBlogs = async (req: Request, res: Response) => {
   const blog = req.body;
   const result = await blogsCollection.insertOne(blog);
   res.send(result);
-};
-
-module.exports = {
-  getAllBlogs,
-  getBlogs,
-  updateBlogs,
-  deleteBlogs,
-  searchBlogs,
-  getBlogById,
-  postBlogs,
 };

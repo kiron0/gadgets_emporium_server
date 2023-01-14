@@ -1,14 +1,15 @@
-const router = require("express").Router();
-const VerifyToken = require("../../middlewares/VerifyToken");
+import { Router } from "express";
+const router: Router = Router();
+import { VerifyToken } from "../../middlewares/VerifyToken";
 
-const {
+import {
   getTeamMembers,
   addTeamMembers,
   deleteTeamMembers,
-} = require("../../controllers/teamsController");
+} from "../../controllers/teams.controller";
 
 router.get("/teamMembers", VerifyToken, getTeamMembers);
 router.post("/teamMembers", VerifyToken, addTeamMembers);
 router.delete("/teamMembers/:id", VerifyToken, deleteTeamMembers);
 
-module.exports = router;
+export default router;

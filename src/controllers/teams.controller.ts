@@ -1,30 +1,25 @@
-const { ObjectId } = require("mongodb");
-const client = require("../utils/dbConnect");
+import { Request, Response } from "express";
+import { ObjectId } from "mongodb";
+import client from "../utils/dbCollection";
 const teamMembersCollection = client
   .db("gadgetsEmporium")
   .collection("teamMembers");
 
-const getTeamMembers = async (req, res) => {
+export const getTeamMembers = async (req: Request, res: Response) => {
   const teamMembers = await teamMembersCollection.find({}).toArray();
   res.send(teamMembers);
 };
 
-const addTeamMembers = async (req, res) => {
+export const addTeamMembers = async (req: Request, res: Response) => {
   const teamMember = req.body;
   const result = await teamMembersCollection.insertOne(teamMember);
   res.send(result);
 };
 
-const deleteTeamMembers = async (req, res) => {
+export const deleteTeamMembers = async (req: Request, res: Response) => {
   const id = req.params.id;
   const result = await teamMembersCollection.deleteOne({
-    _id: ObjectId(id),
+    _id: new ObjectId(id),
   });
   res.send(result);
-};
-
-module.exports = {
-  getTeamMembers,
-  addTeamMembers,
-  deleteTeamMembers,
 };

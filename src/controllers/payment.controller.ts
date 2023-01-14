@@ -1,9 +1,10 @@
-const { ObjectId } = require("mongodb");
+import { Request, Response } from "express";
+import { ObjectId } from "mongodb";
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
-const client = require("../utils/dbConnect");
+import client from "../utils/dbCollection";
 const paymentCollection = client.db("gadgetsEmporium").collection("payments");
 
-const createPaymentIntent = async (req, res) => {
+export const createPaymentIntent = async (req: Request, res: Response) => {
   const data = req.body;
   const price = data.price;
   const amount = price * 100;
@@ -15,15 +16,15 @@ const createPaymentIntent = async (req, res) => {
   res.send({ clientSecret: paymentIntent.client_secret });
 };
 
-const createBooking = async (req, res) => {
+export const createBooking = async (req: Request, res: Response) => {
   const id = req.query.id;
   const payment = req.body;
-  const filter = { _id: ObjectId(id) };
+  const filter = { _id: new ObjectId(id as string) };
   const result = await paymentCollection.insertOne(payment);
   res.send(result);
 };
 
-const getPaymentHistory = async (req, res) => {
+export const getPaymentHistory = async (req: Request, res: Response) => {
   const uid = req.query.uid;
   if (uid) {
     const payment = await paymentCollection.find({ uid: uid }).toArray();
@@ -31,10 +32,4 @@ const getPaymentHistory = async (req, res) => {
   } else {
     res.status(403).send({ message: "forbidden access" });
   }
-};
-
-module.exports = {
-  createPaymentIntent,
-  createBooking,
-  getPaymentHistory,
 };
